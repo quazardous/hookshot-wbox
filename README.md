@@ -117,6 +117,12 @@ It listens on the loopback only, so nothing is exposed on your network. Set the
 client's quality to its highest: a lossy stream smooths away the flickers and
 one-frame artefacts you are most likely watching for.
 
+Set it to **view only** as well. Nothing in the box listens to the client — the
+game's only input device is the virtual pad — so a client sending pointer and
+key events gains you nothing, and krdc in its default mode showed a blank blue
+view of a box that `grim` proved was drawing the game perfectly. View only
+cleared it.
+
 **Watch over VNC, capture with `grim`.** Screenshotting the VNC client would add
 an encode and a decode to the chain, and VNC drops frames and favours what
 changes — the opposite of what a one-frame artefact needs kept. The scenarios'
