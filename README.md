@@ -55,7 +55,10 @@ You need your own copy of the game at the version Hookshot supports, and:
    ```
    On Fedora the build also needs `libstdc++-static nasm meson` and the
    development packages of X11, Xft, Wayland, xkbcommon, libdecor, EGL,
-   PulseAudio, PipeWire and ALSA.
+   PulseAudio, PipeWire and ALSA. On Fedora and Arch, apply
+   [patches/0001](patches/) to the checkout before `deps.sh`: it looks for
+   libXft, libXrender and their licences at Debian's paths only
+   (`git -C Hookshot apply ../hookshot-wbox/patches/0001-*.patch`).
 2. **wbox** with scenarios and the virtual pad, `pip install "wbox-mcp[scenario]"`
    (or its [setup script](https://github.com/quazardous/wbox-mcp#install)),
    and `bwrap` (bubblewrap).

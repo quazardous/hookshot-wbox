@@ -15,7 +15,11 @@ GAME=${2:?a .nup file or a folder with exefs/ and romfs/}
 OUT=${3:-$HOME/Games/Hookshot}
 LANG_CODE=${4:-en-US}
 D=$SRC/build-linux/deps
-[ -x "$D/python/bin/python3" ] || { echo "run $SRC/scripts/linux/deps.sh first" >&2; exit 1; }
+[ -x "$D/python/bin/python3" ] || {
+    echo "run $SRC/scripts/linux/deps.sh first" >&2
+    echo "(on Fedora or Arch, apply patches/0001-*.patch to the checkout before: git -C $SRC apply ...)" >&2
+    exit 1
+}
 
 export EMSDK="$D/emsdk"
 export HOOKSHOT_FFMPEG="$D/ffmpeg"

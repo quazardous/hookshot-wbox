@@ -1,0 +1,31 @@
+diff --git a/scripts/linux/deps.sh b/scripts/linux/deps.sh
+index 545a489..18e5804 100755
+--- a/scripts/linux/deps.sh
++++ b/scripts/linux/deps.sh
+@@ -122,7 +122,12 @@ if ! done_for tk "$TCLTK_VER"; then
+     cp "$DEPS/src-tk/unix/libtcl9tk9.0.so" "$DEPS/tk/"
+     strip --strip-unneeded "$DEPS/tk/libtcl9tk9.0.so"
+     readelf -d "$DEPS/tk/libtcl9tk9.0.so" | grep -q 'libXft\.so\.2' || { echo "Tk was built without Xft"; exit 1; }
+-    cp -L /usr/lib/x86_64-linux-gnu/libXft.so.2 /usr/lib/x86_64-linux-gnu/libXrender.so.1 "$DEPS/tk/"
++    # (Debian and Ubuntu keep them in /usr/lib/x86_64-linux-gnu, Fedora and Arch elsewhere: ask the loader's cache)
++    for lib in libXft.so.2 libXrender.so.1; do
++        path=$(/sbin/ldconfig -p | awk -v l="$lib" '$1 == l && /x86-64/ { print $NF; exit }')
++        [ -n "$path" ] || { echo "$lib not found: install libXft and libXrender"; exit 1; }
++        cp -L "$path" "$DEPS/tk/"
++    done
+     cp "$DEPS/src-tk/license.terms" "$DEPS/tk/Tk-license.terms"
+     rm -rf "$DEPS/src-tcl" "$DEPS/src-tk"
+     mark tk "$TCLTK_VER"
+@@ -188,8 +193,10 @@ if ! done_for licenses "$LLVM_VER-$FFMPEG_VER-$DAV1D_VER-$SDL_VER-$TCLTK_VER"; t
+     curl -fsSL -o "$L/dav1d-COPYING" "https://code.videolan.org/videolan/dav1d/-/raw/$DAV1D_VER/COPYING"
+     cp "$DEPS/sdl2/LICENSE.txt" "$L/SDL2-LICENSE.txt"
+     cp "$DEPS/tk/Tk-license.terms" "$L/Tk-license.terms"
+-    cp /usr/share/doc/libxft2/copyright "$L/libXft-copyright"
+-    cp /usr/share/doc/libxrender1/copyright "$L/libXrender-copyright"
++    # (Debian's copyright files; Fedora and Arch ship the upstream COPYING)
++    first() { for f in "$@"; do [ -f "$f" ] && { echo "$f"; return; }; done; echo "no licence file among: $*" >&2; exit 1; }
++    cp "$(first /usr/share/doc/libxft2/copyright /usr/share/doc/libXft/COPYING /usr/share/licenses/libxft/COPYING)" "$L/libXft-copyright"
++    cp "$(first /usr/share/doc/libxrender1/copyright /usr/share/doc/libXrender/COPYING /usr/share/licenses/libxrender/COPYING)" "$L/libXrender-copyright"
+     mark licenses "$LLVM_VER-$FFMPEG_VER-$DAV1D_VER-$SDL_VER-$TCLTK_VER"
+ fi
+ 
