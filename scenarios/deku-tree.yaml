@@ -1,0 +1,82 @@
+# From launch to inside the Deku Tree: start-up, the title, the save loaded,
+# then the game's own teleport, and a walk in the first room.
+#
+#   scripts/make-refs.sh                 # once: refs/title.png from your game
+#   scripts/deku-tree.sh                 # runs this, and sends the teleport
+#   wboxr compare runs/deku-tree/*/
+#
+# What it measures: the frame times inside the Deku Tree, the scene most of
+# the reports on AMD are about, reached the same way every time.
+#
+# Why a script runs it rather than `wboxr run`: the teleport is a line
+# appended to the game's live input file while it runs (HOS_INPUT_LIVE,
+# "!cheat 1019"), and a scenario has no step that writes a file.
+# scripts/deku-tree.sh appends it, and asks again until the game says it
+# arrived -- a teleport sent while an arrival event is playing is dropped,
+# and the game then logs `reserved ""`.
+#
+# It needs the OoT debug tools: Hookshot v2.0.12 or later. On v2.0.11 the
+# game reads the command and nothing happens -- `cheats: teleport` is simply
+# not in the binary.
+#
+# What it expects of your save: a saved game the title screen's Continue
+# offers first. Link arrives at the Deku Tree's entrance whatever that save
+# holds, but his items are in the HUD, so two PCs only have the same picture
+# if they load the same save.
+
+name: deku-tree
+config: ../wbox/config.yaml
+overrides:
+  timeouts: {app_render: 1}    # launch() returns at once: the waits time the start-up
+
+setup:
+  env:
+    HOS_OOT_CHEATS: "1"                                  # the OoT debug tools
+    HOS_INPUT_LIVE: "{scenario}/../runs/live-deku.txt"   # scripts/deku-tree.sh writes it
+    RX_VK_FRAME_LOG: "{run}/frames.csv"                  # frame, time_s, frametime_ms
+
+masks:
+  # Coordinates for the 1280x720 box (wbox/config.yaml), the game fullscreen.
+  shield: [{only: [430, 230, 110, 150]}]   # the logo's shield: opaque, never the movie
+  hearts: [{rect: [0, 0, 220, 70]}]        # the hearts: the save's, not the renderer's
+
+steps:
+  - wait: {log: "vk: replay ready", timeout: 180}            # the renderer is up
+  - wait: {log: "oe: startup logo finished", timeout: 240}   # the Nintendo logo is over
+  - wait: {match: ../refs/title.png, mask: shield, tolerance: 40, threshold: 0.2,
+           interval: 0.1, timeout: 180}                      # the title is shown
+  - checkpoint: {name: title, mask: shield, tolerance: 40}
+
+  # Continue -> the save list -> Load, two seconds apart. B, not A: the game
+  # maps the Switch's A to SDL button 1 (hookshot_options.ini, `pad_a=1`),
+  # which is where B sits on an Xbox pad -- and the box's pad is an Xbox one.
+  # Pressing A here presses the Switch's B, and the title screen ignores it.
+  - pad_script: "0:B,2:B,4:B"
+
+  # Link is in the world: the debug tools print his inventory once, when they
+  # first see him. It comes before the arrival event has finished playing.
+  - wait: {log: "cheats: inventory probe", timeout: 240}
+  - checkpoint: {name: save-loaded, mask: hearts}
+
+  # scripts/deku-tree.sh now asks for the teleport, and the game checks its
+  # own arrival: this is the scene's name as the game reads it back, not a
+  # guess from a picture.
+  - wait: {log: 'current "InsideTheDekuTree"', timeout: 300}
+  - sleep: 4                                                 # the arrival settles
+  - checkpoint: {name: deku-entrance, mask: hearts}
+
+  # Forward, into the room. Navi, the water and the grass move by themselves,
+  # so two runs never match frame for frame here: the film is for the eye and
+  # for `changed`, the numbers come from the metrics below.
+  - record: {seconds: 10, name: deku-walk, fps: 10,
+             during: {type: pad_script, script: "0:LUP/9000"}}
+  - checkpoint: {name: deku-walked, mask: hearts}
+
+collect:
+  - "{scenario}/../runs/live-deku.txt"     # what was actually asked of the game
+
+metrics:
+  - {name: frametime, file: "{run}/frames.csv", column: frametime_ms, unit: " ms"}
+
+manifest:
+  hookshot_version: cat "${HOOKSHOT_DIR:-$HOME/Games/Hookshot}/hookshot_version.txt"
