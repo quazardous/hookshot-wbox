@@ -108,6 +108,7 @@ wboxr mask suggest runs/boot-title/*/                  # what varies between run
 | Scenario | What it does |
 |---|---|
 | [boot-title](scenarios/boot-title.yaml) | Launch to the title screen: when the renderer, the logo, the movie and the title come; frame times |
+| [deku-tree](scenarios/deku-tree.yaml) | Launch to inside the Deku Tree: the save loaded, the game's own teleport, a walk in the first room; frame times |
 | [make-refs](scenarios/make-refs.yaml) | Makes `refs/title.png`, which boot-title waits for |
 
 Steps wait for **states**, not durations: a line in the game's log, the
@@ -157,6 +158,28 @@ you a timeout several minutes later.
 
 In a container, `wayvnc` needs `spirv-tools` installed or it dies on a missing
 symbol — [docs/containers.md](docs/containers.md) has that and the rest.
+
+### A client that outlives the box
+
+`wayvnc` serves one box, so it dies with it, and a scenario builds a fresh box
+for every run: a client you opened by hand closes two minutes later, when the
+run ends. Watching several runs then means reopening it between each.
+
+[scripts/watch-vnc.sh](scripts/watch-vnc.sh) answers that with
+[noVNC](https://novnc.com/noVNC/docs/EMBEDDING.html), a VNC client in the
+browser that reconnects by itself:
+
+```sh
+scripts/watch-vnc.sh          # serves the page, and a wayvnc per box
+```
+
+Open the URL it prints once and leave the tab. It starts `wayvnc` on each box
+as it appears and retries every two seconds in between, so a run shows up in
+the tab as it starts and the tab is still there for the next one. The URL
+carries `view_only=1` for the reason above.
+
+It needs `novnc`, `python3-websockify` and `wayvnc` — in a container, there
+(the host's browser still opens `127.0.0.1`: distrobox shares the network).
 
 ## With an agent (MCP)
 
