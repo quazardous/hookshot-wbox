@@ -67,6 +67,12 @@ You need your own copy of the game at the version Hookshot supports, and:
 4. Where the game is, if not `~/Games/Hookshot`: `export HOOKSHOT_DIR=...`
    (and `HOOKSHOT_SRC` for the checkout, recorded in each run's manifest).
 
+On **Bazzite, SteamOS, Silverblue or Kinoite** — a Steam Deck or a ROG Ally —
+the base image is read-only and steps 1 and 2 belong in a container instead:
+[docs/containers.md](docs/containers.md) has that path, the GPU through it, and
+the two traps it sets (a shared `/tmp`, and the AppImage inside the pad's
+sandbox).
+
 ## Running scenarios
 
 ```sh
