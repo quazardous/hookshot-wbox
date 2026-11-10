@@ -1,0 +1,31 @@
+# The box Hookshot runs in: a headless labwc compositor, nothing on your
+# desktop, the game's sound kept inside, a virtual Xbox pad as its only
+# input device. Scenarios start from this and override what they need.
+#
+# The game: $HOOKSHOT_DIR/hookshot, ~/Games/Hookshot by default (the folder
+# nx2/make_game.py --out wrote, or the builder's).
+
+name: hookshot
+compositor: labwc
+screen: 1280x720
+headless: true
+input_backend: hybrid
+keyboard_layout: us        # wbox injects US keycodes: the box's layout must match
+audio: null                # the game's sound stays in the box
+
+key_hold_ms: 50            # a game reads the keyboard once a frame
+gamepad: xbox360           # needs /dev/uinput (scripts/setup-uinput.sh) and bwrap
+
+timeouts:
+  app_render: 15           # the game takes a while to open its window
+  stop: 10
+
+log:
+  dir: ./log
+screenshot_dir: ./screenshots
+
+app:
+  command: sh -c 'exec "${HOOKSHOT_DIR:-$HOME/Games/Hookshot}/hookshot"'
+  env:
+    HOOKSHOT_NO_UPDATE_CHECK: "1"
+    HOS_FULLSCREEN: "1"    # the picture fills the box: no title bar, no bars

@@ -1,0 +1,18 @@
+# Makes the reference images the other scenarios wait for, from YOUR game:
+# they are captures of it, so they stay on your PC (refs/ is git-ignored).
+#
+#   scripts/make-refs.sh        # runs this, then copies the captures to refs/
+#
+# Plain waits on time here, since there is no reference yet to wait for:
+# the title is fully shown about 25 s after the Nintendo logo; 35 s leaves
+# a margin on a slower PC.
+
+name: make-refs
+config: ../wbox/config.yaml
+overrides:
+  timeouts: {app_render: 1}
+
+steps:
+  - wait: {log: "oe: startup logo finished", timeout: 240}
+  - sleep: 35
+  - checkpoint: {name: title, mask: none}

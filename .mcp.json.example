@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "hookshot": {
+      "type": "stdio",
+      "command": "sg",
+      "args": [
+        "input",
+        "-c",
+        "exec wbox-mcp serve /ABSOLUTE/PATH/TO/hookshot-wbox/wbox/config.yaml"
+      ]
+    }
+  }
+}

@@ -1,0 +1,49 @@
+# From launch to the title screen, untouched: start-up, the Nintendo logo,
+# the intro movie, the title fading in over it.
+#
+#   scripts/make-refs.sh                     # once: refs/title.png from your game
+#   wboxr run scenarios/boot-title.yaml --repeat 3 --runs runs
+#   wboxr compare runs/boot-title/*/
+#
+# What it measures: when each stage comes (the checkpoints' times count from
+# the launch), whether the title looks the same, and the frame times.
+#
+# How the title is recognised: not after a fixed delay (the intro movie runs
+# for a different time on each PC), but by comparing the centre of the
+# shield, which the movie behind never shows through, with refs/title.png.
+# Measured on the intro filmed at 1 frame/s, tolerance 40: at most 4 % of
+# those pixels differ once the title is shown, at least 69 % before it.
+
+name: boot-title
+config: ../wbox/config.yaml
+overrides:
+  timeouts: {app_render: 1}    # launch() returns at once: the waits time the start-up
+
+setup:
+  env:
+    RX_VK_FRAME_LOG: "{run}/frames.csv"   # frame, time_s, frametime_ms
+
+masks:
+  # Coordinates for the 1280x720 box (wbox/config.yaml), the game fullscreen.
+  shield: [{only: [430, 230, 110, 150]}]   # the logo's shield: opaque, never the movie
+  title-ui:                                # the logo and the menu, for a look by eye
+    - {only: [340, 70, 600, 440]}
+    - {only: [470, 548, 340, 75]}
+
+steps:
+  - wait: {log: "vk: replay ready", timeout: 180}            # the renderer is up
+  - checkpoint: {name: renderer-up, mask: none}
+  - wait: {log: "oe: startup logo finished", timeout: 180}   # the Nintendo logo is over
+  - checkpoint: {name: logo-done, mask: none}
+  - wait: {log: "video: AV1 decoder ready", timeout: 120}    # the intro movie starts
+  - checkpoint: {name: movie-start, mask: none}
+  - wait: {match: ../refs/title.png, mask: shield, tolerance: 40, threshold: 0.2,
+           interval: 0.1, timeout: 120}                      # the title is shown
+  - checkpoint: {name: title, mask: shield, tolerance: 40}
+  - record: {seconds: 3, name: title-film, fps: 10}
+
+metrics:
+  - {name: frametime, file: "{run}/frames.csv", column: frametime_ms, unit: " ms"}
+
+manifest:
+  hookshot_commit: git -C "${HOOKSHOT_SRC:-$HOME/work/Hookshot}" rev-parse --short HEAD

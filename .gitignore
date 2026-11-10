@@ -1,0 +1,12 @@
+# Everything made from the game stays on your PC (Hookshot's CONTRIBUTING.md):
+# captures, reference images, image masks drawn on captures, runs, logs.
+runs/
+refs/
+compare-*/
+masks/*.png
+*.png
+!docs/*.svg
+wbox/log/
+wbox/screenshots/
+*.log
+__pycache__/
