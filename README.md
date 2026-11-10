@@ -73,6 +73,29 @@ the base image is read-only and steps 1 and 2 belong in a container instead:
 the two traps it sets (a shared `/tmp`, and the AppImage inside the pad's
 sandbox).
 
+## Playing it yourself
+
+Before a sequence is worth writing down, you have to play it. `scripts/play.py`
+opens the box, puts **your own pad** through to the game's virtual one, and
+serves the box's screen over VNC so you can watch it in a window:
+
+```sh
+scripts/play.py                     # 30 min, your pad, VNC on 127.0.0.1:5900
+SESSION_MINUTES=5 scripts/play.py   # shorter
+PAD_GRAB=0 scripts/play.py          # let your pad reach the desktop as well
+```
+
+It reads [wbox/config.yaml](wbox/config.yaml), so the box is the one the
+scenarios use, and it prints which pad it found and where to point a VNC
+client. By default your pad is **grabbed**: it drives the box and nothing
+else, so a stick drift does not scroll the window behind. Whatever ends the
+session — the timer, Ctrl-C — gives it back.
+
+`PAD_DEVICE=/dev/input/eventN` picks a pad when the first one found is the
+wrong one, `VNC=0` skips the VNC server for a logged run, and
+`WBOX_RENDERER` / `WBOX_RENDER_DEVICE` point the compositor at a GPU
+(needed in a container: [docs/containers.md](docs/containers.md)).
+
 ## Running scenarios
 
 ```sh
