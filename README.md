@@ -101,6 +101,34 @@ Hookshot's [development guide](https://github.com/NotRexed/Hookshot/blob/main/do
 `HOS_INPUT_SCRIPT` (inputs timed in game frames: the most reproducible way to
 play a sequence), `HOS_DYNRES=0`, `RX_VK_FRAMEGEN=0`.
 
+## Watching a run
+
+The box is headless: the game draws nowhere, which is the point, but it also
+means a run that goes wrong gives you a log and nothing to look at. `wayvnc`
+serves the box's screen to a VNC client you open, move and close like any
+window — the box stays offscreen and nothing takes your focus or your pads.
+
+```sh
+WAYLAND_DISPLAY=wayland-0 wayvnc 127.0.0.1 5900     # beside the running box
+krdc vnc://127.0.0.1:5900                           # or any VNC client
+```
+
+It listens on the loopback only, so nothing is exposed on your network. Set the
+client's quality to its highest: a lossy stream smooths away the flickers and
+one-frame artefacts you are most likely watching for.
+
+**Watch over VNC, capture with `grim`.** Screenshotting the VNC client would add
+an encode and a decode to the chain, and VNC drops frames and favours what
+changes — the opposite of what a one-frame artefact needs kept. The scenarios'
+own captures come straight from the box's output.
+
+Useful while the game is still compiling its pipelines on a first start: VNC
+shows the progress bar, where a scenario waiting on the title screen only shows
+you a timeout several minutes later.
+
+In a container, `wayvnc` needs `spirv-tools` installed or it dies on a missing
+symbol — [docs/containers.md](docs/containers.md) has that and the rest.
+
 ## With an agent (MCP)
 
 Copy [.mcp.json.example](.mcp.json.example) to `.mcp.json` in your project

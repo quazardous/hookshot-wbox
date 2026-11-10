@@ -76,24 +76,21 @@ box.launch(["sh", "-c", f'cd "{HOOKSHOT_DIR}" && exec ./bin/hookshot'],
 `hookshot` script is a launcher that starts the builder again. Checked with
 `ldd`: `bin/hookshot` has no missing library in the container.
 
-## Watching a headless run
+## Watching a headless run from a container
 
-The box stays offscreen; `wayvnc` serves its screen to a VNC client you open and
-close like any window, so nothing takes your focus:
+Watching a box over VNC is in the README; one thing is specific to a container:
 
 ```sh
 distrobox enter wbox -- sudo dnf install -y wayvnc spirv-tools
-WAYLAND_DISPLAY=wayland-0 wayvnc 127.0.0.1 5900
-krdc vnc://127.0.0.1:5900        # on the host
 ```
 
-`spirv-tools` is not optional: the image ships `spirv-tools-libs` from an older
-build, and wayvnc dies on `undefined symbol: spvValidatorOptionsSetAllowOffsetTextureOperand`
-in `libshaderc`.
+`spirv-tools` is not optional here. The image ships `spirv-tools-libs` from an
+older build, and wayvnc dies on `undefined symbol:
+spvValidatorOptionsSetAllowOffsetTextureOperand` in `libshaderc` — a symbol
+error, with nothing about VNC in it.
 
-**Watch through VNC, capture with `grim`.** Screenshotting the VNC client would
-add an encode and a decode to the chain, and VNC drops frames and smooths what
-changes — exactly what a one-frame artefact needs kept.
+The port is reachable from the host as usual: distrobox shares its network
+namespace, so a VNC client outside the container connects to `127.0.0.1:5900`.
 
 ## What a handheld's memory does
 
