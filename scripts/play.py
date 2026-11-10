@@ -25,6 +25,7 @@ watch where the game goes wrong, then write it down as a scenario and have
 
 In a container the last two matter: see docs/containers.md.
 """
+import glob
 import os
 import shlex
 import signal
@@ -33,10 +34,36 @@ import sys
 import time
 from pathlib import Path
 
-from wbox.config import load_config
-from wbox.server import build_compositor
+try:
+    from wbox.config import load_config
+    from wbox.server import build_compositor
+except ModuleNotFoundError:        # the system python3 is rarely the one wbox is in
+    sys.exit("no wbox module for this python.\n"
+             "  pip install \"wbox-mcp[scenario]\", or run this with the "
+             "interpreter it is installed in:\n"
+             "  head -1 $(command -v wboxr)")
 
 REPO = Path(__file__).resolve().parent.parent
+
+
+def newest_real_pad():
+    """The pad you last plugged in, or None.
+
+    `auto` in wbox takes the first device under /dev/input that has gamepad
+    buttons -- and a virtual pad has them too. A box that ended badly leaves
+    its uinput pad behind, named `Microsoft X-Box 360 pad 0`, and the proxy
+    then relays a dead device while your own pad does nothing.
+
+    udev only makes /dev/input/by-id/*-event-joystick for a real one, and the
+    link's time is when it was plugged, so the newest link is the pad you just
+    connected -- which is the one you mean.
+    """
+    links = glob.glob("/dev/input/by-id/*-event-joystick")
+    if not links:
+        return None
+    newest = max(links, key=lambda l: os.lstat(l).st_mtime)
+    return os.path.realpath(newest)
+
 MINUTES = float(os.environ.get("SESSION_MINUTES", "30"))
 GRAB = os.environ.get("PAD_GRAB", "1") != "0"
 DEVICE = os.environ.get("PAD_DEVICE", "auto")
@@ -77,11 +104,12 @@ try:
               flush=True)
 
     # your pad into the box's pad: nothing else in the box reads input
-    p = box.pad_proxy(DEVICE, grab=GRAB)
+    p = box.pad_proxy(DEVICE if DEVICE != "auto" else (newest_real_pad() or "auto"),
+                      grab=GRAB)
     if p.get("error"):
-        print(f"  no pad proxy: {p['error']}\n"
-              "  the game will not see your pad — PAD_DEVICE=/dev/input/eventN "
-              "picks one", flush=True)
+        print(f"  no pad proxy yet: {p['error']}\n"
+              "  plug one in and it is picked up within a couple of seconds "
+              "(PAD_DEVICE=/dev/input/eventN picks a given one)", flush=True)
     else:
         pad = p.get("proxy", {})
         print(f"  your pad     {pad.get('name')} on {pad.get('device')}"
@@ -107,10 +135,28 @@ try:
     print(f"\n{MINUTES:.0f} min, then the box is stopped and your pad is "
           "given back. Ctrl-C does the same.\n", flush=True)
 
+    # A pad plugged in after the launch, or unplugged and plugged back: wbox
+    # looks for one when the proxy starts and not again, so the session looks
+    # for it instead. The game never sees the change -- inside the sandbox its
+    # only input device is the box's virtual pad, there from the start.
     end = time.time() + MINUTES * 60
+    note = time.time() + 120
     minute = 0
     while time.time() < end:
-        time.sleep(min(120, max(1, end - time.time())))
+        time.sleep(min(2, max(0.1, end - time.time())))
+        proxy = getattr(box, "_pad_proxy", None)
+        if proxy is None or not proxy.status().get("running"):
+            again = box.pad_proxy(
+                DEVICE if DEVICE != "auto" else (newest_real_pad() or "auto"),
+                grab=GRAB)
+            if not again.get("error"):
+                pad = again.get("proxy", {})
+                print(f"  your pad     {pad.get('name')} on {pad.get('device')}"
+                      f"{'  grabbed: it drives the box only' if pad.get('grab') else '  shared with the desktop'}",
+                      flush=True)
+        if time.time() < note:
+            continue
+        note += 120
         minute += 2
         shot = box.screenshot(f"play-{minute:03d}")
         proxy = getattr(box, "_pad_proxy", None)
