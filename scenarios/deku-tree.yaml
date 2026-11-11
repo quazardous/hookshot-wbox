@@ -40,11 +40,19 @@ masks:
   shield: [{only: [430, 230, 110, 150]}]   # the logo's shield: opaque, never the movie
   hearts: [{rect: [0, 0, 220, 70]}]        # the hearts: the save's, not the renderer's
 
+# The timeouts below are generous because of the first start-up after a new
+# Hookshot: the game compiles its shaders as it boots, and until its program
+# cache holds them that boot is long. Measured here on a Z1 Extreme, cold
+# after v2.1.0: 240 s got 23% of the way, and the log says how far it is
+# (`vk: start-up: shaders N of M`, with a time left once it can guess). Warm,
+# the same step takes a few seconds -- so a long timeout costs nothing on the
+# runs that matter, and saves a failed run on the first one.
+
 steps:
   - wait: {log: "vk: replay ready", timeout: 180}            # the renderer is up
-  - wait: {log: "oe: startup logo finished", timeout: 240}   # the Nintendo logo is over
+  - wait: {log: "oe: startup logo finished", timeout: 1800}  # the Nintendo logo is over
   - wait: {match: ../refs/title.png, mask: shield, tolerance: 40, threshold: 0.2,
-           interval: 0.1, timeout: 180}                      # the title is shown
+           interval: 0.1, timeout: 600}                      # the title is shown
   - checkpoint: {name: title, mask: shield, tolerance: 40}
 
   # Continue -> the save list -> Load, two seconds apart. B, not A: the game
@@ -55,7 +63,7 @@ steps:
 
   # Link is in the world: the debug tools print his inventory once, when they
   # first see him. It comes before the arrival event has finished playing.
-  - wait: {log: "cheats: inventory probe", timeout: 240}
+  - wait: {log: "cheats: inventory probe", timeout: 600}
   - checkpoint: {name: save-loaded, mask: hearts}
 
   # scripts/deku-tree.sh now asks for the teleport, and the game checks its
