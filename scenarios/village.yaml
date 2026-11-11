@@ -1,0 +1,49 @@
+# Kokiri Forest, plain: the same scripted minute as village-flash.yaml, with
+# nothing watching. It is the baseline the flash runs are measured against --
+# the detector reads every presented frame back from the GPU, which costs frames
+# of its own, so a flash run's frame rate is not the game's.
+#
+#   scripts/make-refs.sh                 # once: refs/title.png from your game
+#   wboxr run scenarios/village.yaml --runs runs
+#
+# Use it for what the village costs (#2156: the forest holds more textures than
+# its budget while the Deku Tree does not), and as the control for
+# village-flash.yaml.
+
+name: village
+config: ../wbox/config.yaml
+overrides:
+  timeouts: {app_render: 1}
+
+setup:
+  env:
+    HOS_OOT_CHEATS: "1"                  # the debug tools say when Link exists
+    RX_VK_FRAME_LOG: "{run}/frames.csv"
+masks:
+  shield: [{only: [430, 230, 110, 150]}]   # the logo's shield: opaque, never the movie
+  hearts: [{rect: [0, 0, 220, 70]}]        # the hearts: the save's, not the renderer's
+
+steps:
+  - wait: {log: "vk: replay ready", timeout: 180}
+  - wait: {log: "oe: startup logo finished", timeout: 1800}
+  - wait: {match: ../refs/title.png, mask: shield, tolerance: 40, threshold: 0.2,
+           interval: 0.1, timeout: 600}
+  - checkpoint: {name: title, mask: shield, tolerance: 40}
+
+  # Continue -> the save list -> Load. B, not A (hookshot_options.ini, pad_a=1).
+  - pad_script: "0:b,2:b,4:b"
+  - wait: {log: "cheats: inventory probe", timeout: 600}
+  - sleep: 6                                   # the arrival event finishes
+  - checkpoint: {name: village, mask: hearts}
+
+  # The same minute as village-flash.yaml, to the millisecond: forward, turns,
+  # and camera pans in between. It is only a baseline if it is the same walk.
+  - record: {seconds: 60, name: village-walk, fps: 2,
+             during: {type: pad_script, script: "0:lup/9000,9.5:rright/2500,12:lup/8000,20:lleft/2500,23:lup/7000,30:rleft/3000,33.5:lup/9000,43:lright/2500,46:lup/8000,54:rright/3000,57:lup/3000"}}
+  - checkpoint: {name: village-walked, mask: hearts}
+
+metrics:
+  - {name: frametime, file: "{run}/frames.csv", column: frametime_ms, unit: " ms"}
+
+manifest:
+  hookshot_version: cat "${HOOKSHOT_DIR:-$HOME/Games/Hookshot}/hookshot_version.txt"
