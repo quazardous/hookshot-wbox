@@ -1,0 +1,71 @@
+# Kokiri Forest, with the renderer's own flash detector on: a minute of walking
+# and panning the camera in the village, and a count of the one-frame flashes
+# the renderer saw itself.
+#
+#   scripts/make-refs.sh                 # once: refs/title.png from your game
+#   scripts/village-flash.sh             # runs this
+#
+# What it measures: `RX_VK_FLASH=1` shrinks every presented frame to 64x36
+# cells and compares it against both its neighbours. A frame that differs from
+# the two where they agree is a one-frame flash: the three frames are written as
+# flash_<present>_{a,b,c}.png and the log says how many cells jumped, by how
+# much and where. `RX_VK_FLASH_DIFF` (48) is the jump that counts and
+# `RX_VK_FLASH_CELLS` (40) how many cells must jump, so lowering either finds
+# subtler ones. This is the renderer's own measurement, not a comparison of our
+# captures: wbox only films what it sees, at a few frames a second.
+#
+# Why the village: it is where the reports put the flashes (#1005, #2161), and
+# where the game holds more textures than its budget (#2156).
+#
+# What it costs: `RX_VK_SHOT_EVERY=1` reads back every frame, so the frame rate
+# in this run is not the game's usual one. Flash counts are what to read here,
+# not the frametimes.
+
+name: village-flash
+config: ../wbox/config.yaml
+overrides:
+  timeouts: {app_render: 1}
+
+setup:
+  env:
+    HOS_OOT_CHEATS: "1"                  # the debug tools say when Link exists
+    RX_VK_FRAME_LOG: "{run}/frames.csv"
+    RX_VK_FLASH: "1"                     # the flash detector
+    RX_VK_SHOT_EVERY: "1"                # it needs every frame read back
+    RX_VK_FLASH_DUMPS: "6"               # frames after a flash dumped in full
+    # A fixed folder, emptied by scripts/village-flash.sh and collected below:
+    # the run's own folder does not exist yet when this is expanded.
+    RX_VK_SHOTS: "{scenario}/../runs/village-flash-shots"
+
+masks:
+  shield: [{only: [430, 230, 110, 150]}]   # the logo's shield: opaque, never the movie
+  hearts: [{rect: [0, 0, 220, 70]}]        # the hearts: the save's, not the renderer's
+
+steps:
+  - wait: {log: "vk: replay ready", timeout: 180}
+  - wait: {log: "oe: startup logo finished", timeout: 1800}
+  - wait: {match: ../refs/title.png, mask: shield, tolerance: 40, threshold: 0.2,
+           interval: 0.1, timeout: 600}
+  - checkpoint: {name: title, mask: shield, tolerance: 40}
+
+  # Continue -> the save list -> Load. B, not A (hookshot_options.ini, pad_a=1).
+  - pad_script: "0:b,2:b,4:b"
+  - wait: {log: "cheats: inventory probe", timeout: 600}
+  - sleep: 6                                   # the arrival event finishes
+  - checkpoint: {name: village, mask: hearts}
+
+  # A minute in the village: forward, then turns, with camera pans in between --
+  # the brightness sawtooth of #570 comes from a view-dependent volume, so the
+  # camera has to move for it to show.
+  - record: {seconds: 60, name: village-walk, fps: 2,
+             during: {type: pad_script, script: "0:lup/9000,9.5:rright/2500,12:lup/8000,20:lleft/2500,23:lup/7000,30:rleft/3000,33.5:lup/9000,43:lright/2500,46:lup/8000,54:rright/3000,57:lup/3000"}}
+  - checkpoint: {name: village-walked, mask: hearts}
+
+collect:
+  - "{scenario}/../runs/village-flash-shots"   # the detector's frames
+
+metrics:
+  - {name: frametime, file: "{run}/frames.csv", column: frametime_ms, unit: " ms"}
+
+manifest:
+  hookshot_version: cat "${HOOKSHOT_DIR:-$HOME/Games/Hookshot}/hookshot_version.txt"
