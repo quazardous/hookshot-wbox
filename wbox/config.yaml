@@ -2,11 +2,12 @@
 # desktop, the game's sound kept inside, a virtual Xbox pad as its only
 # input device. Scenarios start from this and override what they need.
 #
-# The game: $LONGSHOT_DIR/bin/longshot, ~/Games/Longshot by default (the
-# folder nx2/make_game.py --out wrote, or the builder's). bin/longshot is the
-# game itself; the folder's longshot script is a launcher that starts the
-# builder again, and an AppImage cannot mount its FUSE filesystem inside the
-# sandbox the virtual pad puts the app in (docs/containers.md).
+# The game: in $LONGSHOT_DIR, ~/Games/Longshot by default. In the builder's
+# folder the game is bin/longshot; the folder's longshot script is a launcher
+# that starts the builder again, and an AppImage cannot mount its FUSE
+# filesystem inside the sandbox the virtual pad puts the app in
+# (docs/containers.md). In a folder nx2/make_game.py --out wrote
+# (scripts/build-longshot.sh) there is no bin/: longshot is the game itself.
 
 name: longshot
 compositor: labwc
@@ -28,7 +29,7 @@ log:
 screenshot_dir: ./screenshots
 
 app:
-  command: sh -c 'cd "${LONGSHOT_DIR:-$HOME/Games/Longshot}" && exec ./bin/longshot'
+  command: sh -c 'cd "${LONGSHOT_DIR:-$HOME/Games/Longshot}" && if [ -x bin/longshot ]; then exec ./bin/longshot; else exec ./longshot; fi'
   env:
     LONGSHOT_NO_UPDATE_CHECK: "1"
     HOS_FULLSCREEN: "1"    # the picture fills the box: no title bar, no bars
