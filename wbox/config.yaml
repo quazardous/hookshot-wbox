@@ -1,15 +1,15 @@
-# The box Hookshot runs in: a headless labwc compositor, nothing on your
+# The box Longshot runs in: a headless labwc compositor, nothing on your
 # desktop, the game's sound kept inside, a virtual Xbox pad as its only
 # input device. Scenarios start from this and override what they need.
 #
-# The game: in $HOOKSHOT_DIR, ~/Games/Hookshot by default. In the builder's
-# folder the game is bin/hookshot; the folder's hookshot script is a launcher
+# The game: in $LONGSHOT_DIR, ~/Games/Longshot by default. In the builder's
+# folder the game is bin/longshot; the folder's longshot script is a launcher
 # that starts the builder again, and an AppImage cannot mount its FUSE
 # filesystem inside the sandbox the virtual pad puts the app in
 # (docs/containers.md). In a folder nx2/make_game.py --out wrote
-# (scripts/build-hookshot.sh) there is no bin/: hookshot is the game itself.
+# (scripts/build-longshot.sh) there is no bin/: longshot is the game itself.
 
-name: hookshot
+name: longshot
 compositor: labwc
 screen: 1280x720
 headless: true
@@ -29,7 +29,7 @@ log:
 screenshot_dir: ./screenshots
 
 app:
-  command: sh -c 'cd "${HOOKSHOT_DIR:-$HOME/Games/Hookshot}" && if [ -x bin/hookshot ]; then exec ./bin/hookshot; else exec ./hookshot; fi'
+  command: sh -c 'cd "${LONGSHOT_DIR:-$HOME/Games/Longshot}" && if [ -x bin/longshot ]; then exec ./bin/longshot; else exec ./longshot; fi'
   env:
-    HOOKSHOT_NO_UPDATE_CHECK: "1"
+    LONGSHOT_NO_UPDATE_CHECK: "1"
     HOS_FULLSCREEN: "1"    # the picture fills the box: no title bar, no bars

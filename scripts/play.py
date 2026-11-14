@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Play Hookshot in the box, with your own pad, watching over VNC.
+"""Play Longshot in the box, with your own pad, watching over VNC.
 
 The box stays offscreen, so a run can be watched without taking over the
 screen: the game runs headless, `wayvnc` serves the box's output to a VNC
@@ -19,7 +19,7 @@ watch where the game goes wrong, then write it down as a scenario and have
     PAD_DEVICE=/dev/input/event4       a pad, instead of the first one found
     VNC_PORT=5901                      a port, instead of 5900
     VNC=0                              no VNC: a scripted or logged run
-    HOOKSHOT_DIR=...                   the game, if not ~/Games/Hookshot
+    LONGSHOT_DIR=...                   the game, if not ~/Games/Longshot
     WBOX_RENDERER=gles2                the compositor's renderer
     WBOX_RENDER_DEVICE=/dev/dri/renderD128   which GPU it draws on
 

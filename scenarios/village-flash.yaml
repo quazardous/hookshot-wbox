@@ -48,7 +48,7 @@ steps:
            interval: 0.1, timeout: 600}
   - checkpoint: {name: title, mask: shield, tolerance: 40}
 
-  # Continue -> the save list -> Load. B, not A (hookshot_options.ini, pad_a=1).
+  # Continue -> the save list -> Load. B, not A (longshot_options.ini, pad_a=1).
   - pad_script: "0:b,2:b,4:b"
   - wait: {log: "cheats: inventory probe", timeout: 600}
   - sleep: 6                                   # the arrival event finishes
@@ -68,4 +68,8 @@ metrics:
   - {name: frametime, file: "{run}/frames.csv", column: frametime_ms, unit: " ms"}
 
 manifest:
-  hookshot_version: cat "${HOOKSHOT_DIR:-$HOME/Games/Hookshot}/hookshot_version.txt"
+  longshot_version: cat "${LONGSHOT_DIR:-$HOME/Games/Longshot}/longshot_version.txt"
+  # The driver the game actually loads -- the container's Mesa, not the host's
+  # (docs/containers.md). Missing from host.gpus whenever vulkaninfo is absent,
+  # which is how a regression here was once blamed on a driver that never ran.
+  vulkan_driver: ../scripts/vulkan-driver.sh
