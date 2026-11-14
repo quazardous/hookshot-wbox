@@ -15,7 +15,7 @@
 # arrived -- a teleport sent while an arrival event is playing is dropped,
 # and the game then logs `reserved ""`.
 #
-# It needs the OoT debug tools: Hookshot v2.0.12 or later. On v2.0.11 the
+# It needs the OoT debug tools: Longshot v2.0.12 or later. On v2.0.11 the
 # game reads the command and nothing happens -- `cheats: teleport` is simply
 # not in the binary.
 #
@@ -41,7 +41,7 @@ masks:
   hearts: [{rect: [0, 0, 220, 70]}]        # the hearts: the save's, not the renderer's
 
 # The timeouts below are generous because of the first start-up after a new
-# Hookshot: the game compiles its shaders as it boots, and until its program
+# Longshot: the game compiles its shaders as it boots, and until its program
 # cache holds them that boot is long. Measured here on a Z1 Extreme, cold
 # after v2.1.0: 240 s got 23% of the way, and the log says how far it is
 # (`vk: start-up: shaders N of M`, with a time left once it can guess). Warm,
@@ -56,7 +56,7 @@ steps:
   - checkpoint: {name: title, mask: shield, tolerance: 40}
 
   # Continue -> the save list -> Load, two seconds apart. B, not A: the game
-  # maps the Switch's A to SDL button 1 (hookshot_options.ini, `pad_a=1`),
+  # maps the Switch's A to SDL button 1 (longshot_options.ini, `pad_a=1`),
   # which is where B sits on an Xbox pad -- and the box's pad is an Xbox one.
   # Pressing A here presses the Switch's B, and the title screen ignores it.
   - pad_script: "0:B,2:B,4:B"
@@ -87,4 +87,8 @@ metrics:
   - {name: frametime, file: "{run}/frames.csv", column: frametime_ms, unit: " ms"}
 
 manifest:
-  hookshot_version: cat "${HOOKSHOT_DIR:-$HOME/Games/Hookshot}/hookshot_version.txt"
+  longshot_version: cat "${LONGSHOT_DIR:-$HOME/Games/Longshot}/longshot_version.txt"
+  # The driver the game actually loads -- the container's Mesa, not the host's
+  # (docs/containers.md). Missing from host.gpus whenever vulkaninfo is absent,
+  # which is how a regression here was once blamed on a driver that never ran.
+  vulkan_driver: ../scripts/vulkan-driver.sh

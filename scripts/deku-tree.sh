@@ -11,7 +11,7 @@
 #   scripts/deku-tree.sh            # inside the Deku Tree
 #   DEST=1 SCENE=HyruleField_Child scripts/deku-tree.sh
 #
-# Destinations are host/hos_main.c's oot_destinations[] in Hookshot's source:
+# Destinations are host/hos_main.c's oot_destinations[] in Longshot's source:
 # 0 Kokiri Forest, 1 Hyrule Field, 2 Kakariko, 3 Market, 9 Death Mountain
 # Trail, 19 Inside the Deku Tree, 20 Dodongo's Cavern. SCENE is the name the
 # game logs for it, which is what tells us it arrived.

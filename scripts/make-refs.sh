@@ -1,7 +1,7 @@
 #!/bin/sh
 # Make refs/: the reference captures the scenarios wait for, taken from your
 # own game. They are made from the game, so they stay on this PC: refs/ is
-# git-ignored, and they must not be shared (Hookshot's CONTRIBUTING.md).
+# git-ignored, and they must not be shared (Longshot's CONTRIBUTING.md).
 set -eu
 cd "$(dirname "$0")/.."
 WBOXR=${WBOXR:-wboxr}
