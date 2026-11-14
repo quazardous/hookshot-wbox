@@ -152,6 +152,27 @@ Longshot's [development guide](https://git.magicbean.dev/MagicBeanDev/Longshot/s
 `HOS_INPUT_SCRIPT` (inputs timed in game frames: the most reproducible way to
 play a sequence), `HOS_DYNRES=0`, `RX_VK_FRAMEGEN=0`.
 
+## Driving the game instead of guessing
+
+Longshot opens a control bridge when `HOS_CONTROL` names a socket (its
+[`docs/control.md`](https://git.magicbean.dev/MagicBeanDev/Longshot/src/branch/main/docs/control.md)):
+newline-delimited JSON over a Unix socket, local only, 0600, the client checked
+by `SO_PEERCRED`. [scripts/longshot-bridge.py](scripts/longshot-bridge.py) is a
+small client for it — the game's own `scripts/longshot_ctl.py` is the complete
+one:
+
+```sh
+HOS_CONTROL=$XDG_RUNTIME_DIR/longshot/control.sock ./bin/longshot &
+scripts/longshot-bridge.py status                     # fps, draws, state, map
+scripts/longshot-bridge.py option set fps_counter true
+scripts/longshot-bridge.py teleport InsideTheDekuTree
+scripts/longshot-bridge.py watch --events present,map --count 5
+```
+
+It matters for measuring: the scenarios here wait on log lines and on what the
+screen shows, because that was all there was. The bridge answers with the frame
+each thing happened at, so a step no longer has to be inferred from a picture.
+
 ## Watching a run
 
 The box is headless: the game draws nowhere, which is the point, but it also
